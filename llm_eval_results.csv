@@ -1,0 +1,94 @@
+question,prompt,answer,groundedness,relevance,helpfulness
+What is my current project?,A_basic,"Your current project is MemoryRAG, a personal memory RAG system, which is also your final project for the LLM Zoomcamp 2026. The current focus of the project is on the data model and seed data (Phase 1), and the next step is to stand up Postgres and load seed data.",5,5,5
+What is my current project?,B_structured,"Your current project is MemoryRAG, a personal memory RAG system, which is also intended to be your final project for the LLM Zoomcamp 2026.",5,5,5
+What is my current project?,C_reasoning,"Here are the answers to your questions:
+1. The relevant retrieved memories indicate that the user is working on a project called MemoryRAG, a personal memory RAG system, as part of the LLM Zoomcamp 2026, and their current focus is on the data model and seed data.
+2. The blockers mentioned include spending time on social media instead of starting work, and getting distracted by reinstalling an app.
+3. The recommended next action is to stand up Postgres and load seed data, as this is the identified next step for the MemoryRAG project.
+4. Confidence is medium, as there is some relevant context about the project and goals, but not a lot of detail about the current state or specific challenges.",5,5,5
+What should I focus on next in the RAG project?,A_basic,"According to the project context, the current focus is on the ""Data model and seed data (Phase 1)"" and the next step is to ""Stand up Postgres and load seed data"". Therefore, you should focus on setting up Postgres and loading seed data next in the RAG project.",5,5,5
+What should I focus on next in the RAG project?,B_structured,"According to the context, your current focus in the MemoryRAG project is ""Data model and seed data (Phase 1)"". The next step is to ""Stand up Postgres and load seed data"". Therefore, you should focus on standing up Postgres and loading seed data next.",5,5,5
+What should I focus on next in the RAG project?,C_reasoning,"Here are the answers to your questions:
+1. The relevant retrieved memories indicate that the project MemoryRAG is currently in Phase 1, focusing on the data model and seed data, with the next step being to stand up Postgres and load seed data. The user has been struggling with motivation and getting started, but has made some progress, such as setting up the project repo.
+2. The blockers or obstacles mentioned include spending time on social media instead of starting work, and struggling with motivation.
+3. The recommended next action is to stand up Postgres and load seed data, as this is the next step mentioned in the project context.
+4. My confidence is medium, as there is some relevant context about the project and the user's progress, but not a lot of detailed information about the specific challenges or obstacles that need to be overcome.",5,5,5
+What are my main goals right now?,A_basic,"Your main goals right now are:
+
+1. **Rebuild a consistent daily routine**: Get back to writing and working on projects daily.
+2. **Complete LLM Zoomcamp 2026**: Finish all modules and ship a working final RAG project.
+
+Both goals are currently ""in_progress"" and have a priority of 1/5.",5,5,5
+What are my main goals right now?,B_structured,"Your main goals right now are:
+
+1. Rebuild a consistent daily routine
+2. Complete LLM Zoomcamp 2026 
+
+Both goals are currently ""in_progress"" with a priority of 1/5.",5,5,5
+What are my main goals right now?,C_reasoning,"Here are the answers to your questions:
+1. The relevant retrieved memories indicate that the user's main goals are to rebuild a consistent daily routine and complete the LLM Zoomcamp 2026, with the latter involving working on a capstone project.
+2. The blockers mentioned include spending time on social media instead of starting work, and getting distracted by opening social media or other content.
+3. A concrete next action based on the evidence would be to start working on the capstone project immediately after check-in, before consuming any other content or opening social media.
+4. Confidence is medium, as there is some relevant context about the user's goals and blockers, but not a lot of detail about the specific actions they can take to achieve their goals.",5,5,4
+Why am I struggling to keep a daily routine?,A_basic,"Based on the reflections and check-ins provided, it appears that you are struggling to keep a daily routine due to a few reasons:
+
+1. **Social media distraction**: You mentioned that you spent a significant amount of time on social media (20 minutes on July 24 and 90 minutes on July 25), which seems to be a major blocker for you. You also reinstalled an app that you had previously deleted, indicating that you may be struggling with self-control when it comes to social media.
+2. **Lack of motivation**: Your motivation levels have been relatively low (4/10 on both July 24 and 25), which can make it harder to stick to a daily routine. You mentioned that you had high motivation on July 24, but it was low on July 25.
+3. **Procrastination**: You mentioned that you spent 10 minutes on something else instead of starting your task on July 24, and that you kept opening social media instead of starting your task on July 25. This suggests that you may be procrastinating and having trouble getting started with your tasks.
+4. **Trigger of boredom**: In your check-ins, you mentioned that your trigger for not doing your planned task was boredom. This suggests that you may be struggling to find meaning or interest in your daily routine, leading to a lack of motivation and discipline.
+
+Overall, it seems that you are struggling to keep a daily routine due to a combination of social media distraction, lack of motivation, procrastination, and boredom. Addressing these underlying issues may help you to establish a more consistent daily routine.",5,5,5
+Why am I struggling to keep a daily routine?,B_structured,"Based on the retrieved context, it appears that social media is a significant blocker to your daily routine. On July 24, you spent 20 minutes on social media, and on July 25, you spent 90 minutes, which seems to have affected your motivation and productivity. Additionally, you reinstalled an app after deleting it last week, suggesting a pattern of distraction. Your reflections also mention that starting work is easier right after check-in, before consuming any content or opening your phone, implying that social media and other digital distractions are hindering your ability to establish a consistent daily routine.",5,5,5
+Why am I struggling to keep a daily routine?,C_reasoning,"Here are the answers to your questions:
+1. The relevant memories indicate that the user is struggling to maintain a daily routine, often getting distracted by social media, and having low motivation levels, but has made some progress in setting up a project repository and thinking about their zoomcamp capstone project. The user's reflections suggest that starting work right after check-in, before consuming any content, is easier.
+2. The blockers mentioned are spending time on social media instead of starting work, and getting distracted by it, as well as low motivation levels.
+3. Based on the evidence, a concrete next action would be to start work on the project immediately after the daily check-in, without opening social media or any other distracting content.
+4. My confidence is medium, as there is some relevant context about the user's struggles and reflections, but not a lot of information about their daily routine, habits, or motivation outside of the specific reflections provided.",5,5,4
+What blocked me from working on my project recently?,A_basic,"According to your reflections, the blockers that prevented you from working on your project were:
+
+1. Spending 10 minutes on ""x"" (unspecified) on July 24th.
+2. Opening social media instead of starting work on July 25th, where you spent 90 minutes on social media.
+
+These distractions seem to be a common theme, and you've identified that starting work immediately after check-in, before consuming any content or opening your phone, is easier and more productive.",5,5,5
+What blocked me from working on my project recently?,B_structured,"Based on the retrieved context, the blockers that prevented you from working on your project recently were:
+
+1. Spending 10 minutes on ""x"" (Reflection 2026-07-24)
+2. Opening social media instead of starting work (Reflection 2026-07-25)
+
+It appears that social media is a recurring blocker, as you also mentioned reinstalling the app after deleting it last week, and your social media minutes increased significantly from 20 to 90 between the two reflection days.",5,5,5
+What blocked me from working on my project recently?,C_reasoning,"Here are the answers to your questions:
+1. The relevant retrieved memories indicate that the user has been struggling to work on their project, with recent reflections showing low mood and energy, and accomplishments being hindered by social media usage. The user has been trying to rebuild a consistent daily routine and complete the LLM Zoomcamp 2026.
+2. The blockers mentioned are spending time on non-essential activities (e.g. ""x"" and social media) instead of starting work on the project, and reopening social media instead of focusing on the project.
+3. A concrete next action based on the evidence would be to start working on the project immediately after check-in, without consuming any content or opening social media.
+4. Confidence is medium, as there is some relevant context about the user's recent reflections and goals, but not a lot of detail about the project itself or the user's overall progress.",5,5,4
+How was my mood a couple of days ago?,A_basic,"According to your reflections, two days ago (2026-07-24) and the day before that are not available, but the day before yesterday (2026-07-25) and yesterday are. 
+
+Yesterday (2026-07-25) and the day before yesterday (2026-07-24), your mood was 4/10.",5,5,5
+How was my mood a couple of days ago?,B_structured,Your mood two days ago (2026-07-25) was 4/10. The day before that (2026-07-24) was also 4/10. There's a pattern of consistent mood levels over these two days.,5,5,5
+How was my mood a couple of days ago?,C_reasoning,"Here are the answers to your questions:
+1. The relevant retrieved memories indicate that the user's mood was 4/10 a couple of days ago, on both 2026-07-24 and 2026-07-25, with similar energy levels.
+2. The blockers mentioned include spending time on non-essential activities, such as social media, instead of starting work on the project.
+3. A concrete next action could be to start working on the project immediately after check-in, before consuming any content or opening social media.
+4. Confidence is medium, as there is some relevant context about the user's mood and blockers, but not a lot of detailed information about their current situation or specific goals beyond rebuilding a consistent daily routine.",5,4,3
+Did I reinstall social media recently?,A_basic,"No, according to your check-ins, you did not reinstall the app (presumably social media) on any of the days you checked in. The ""Reinstalled app"" field is ""no"" for all check-ins.",5,5,5
+Did I reinstall social media recently?,B_structured,"No, according to the context, you did not reinstall the app on any of the checked-in days (2026-07-13, 2026-07-14, 2026-07-17, 2026-07-18, 2026-07-21). The ""Reinstalled app"" field is ""no"" for all entries.",5,5,5
+Did I reinstall social media recently?,C_reasoning,"Here are the answers to your questions:
+1. The retrieved memories indicate a series of check-ins from July 13 to July 21, with varying levels of motivation and task completion, but consistently show that the app was not reinstalled.
+2. The blockers or obstacles mentioned are low motivation levels and frequent social media usage.
+3. Recommend reviewing the planned tasks and adjusting them to better match current motivation levels to improve task completion.
+4. Confidence is medium, as there are multiple check-ins providing relevant context, but the context is limited to a specific set of metrics and does not provide a comprehensive view of the situation.",5,4,3
+How motivated have I felt this week?,A_basic,"Based on the reflections provided, your motivation levels have been varying. 
+
+On 2026-07-24, you mentioned ""High motivation"" in your notes. 
+On 2026-07-25, you mentioned ""Low motivation today"" in your notes.
+
+There are also check-ins from earlier in the month (2026-07-15 and 2026-07-13) that report motivation levels of 5/10 and 3/10, respectively. However, these are not from this week.
+
+So, focusing on this week, your motivation has been high on 2026-07-24 and low on 2026-07-25.",5,5,5
+How motivated have I felt this week?,B_structured,"Based on the reflections provided, your motivation levels have been inconsistent. On 2026-07-24, you mentioned ""High motivation"", but on 2026-07-25, it was ""Low motivation"". The check-ins from earlier in the month (2026-07-15 and 2026-07-13) reported motivation levels of 5/10 and 3/10, respectively. Overall, it seems your motivation has been moderate to low, with some fluctuations.",5,5,5
+How motivated have I felt this week?,C_reasoning,"Here are the answers to your questions:
+
+1. This week, motivation levels have been variable, with a high motivation day followed by a low motivation day, and overall mood and energy levels have been at 4/10.
+2. The main blockers mentioned are spending time on social media and getting distracted, which has prevented consistent progress on the project.
+3. Based on the evidence, a concrete next action could be to start working on the project immediately after the daily check-in, before opening social media or any other distracting content.
+4. Confidence is medium, as there is some relevant context about motivation levels and blockers, but the context is limited to a few days and does not provide a complete picture of the user's habits and motivations.",5,5,5

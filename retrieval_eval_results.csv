@@ -1,0 +1,22 @@
+question,method,recall,mrr,precision
+What are my main goals right now?,vector,0.0,0.0,0.0
+What are my main goals right now?,bm25,1.0,0.25,0.2
+What are my main goals right now?,hybrid,1.0,0.25,0.2
+Why am I struggling to keep a daily routine?,vector,1.0,1.0,0.2
+Why am I struggling to keep a daily routine?,bm25,1.0,1.0,0.2
+Why am I struggling to keep a daily routine?,hybrid,1.0,1.0,0.2
+What blocked me from working on my project recently?,vector,1.0,1.0,0.4
+What blocked me from working on my project recently?,bm25,1.0,1.0,0.4
+What blocked me from working on my project recently?,hybrid,1.0,1.0,0.4
+How was my mood a couple of days ago?,vector,1.0,0.2,0.2
+How was my mood a couple of days ago?,bm25,1.0,1.0,0.4
+How was my mood a couple of days ago?,hybrid,1.0,1.0,0.4
+Did I reinstall social media recently?,vector,1.0,1.0,1.0
+Did I reinstall social media recently?,bm25,1.0,0.25,0.4
+Did I reinstall social media recently?,hybrid,1.0,1.0,1.0
+How motivated have I felt this week?,vector,1.0,0.5,0.6
+How motivated have I felt this week?,bm25,0.0,0.0,0.0
+How motivated have I felt this week?,hybrid,1.0,0.25,0.4
+Did I complete my planned tasks yesterday?,vector,1.0,0.5,0.8
+Did I complete my planned tasks yesterday?,bm25,1.0,0.2,0.2
+Did I complete my planned tasks yesterday?,hybrid,1.0,0.5,0.6
