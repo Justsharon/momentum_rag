@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-graphite: #1C1B1A;
+  --color-panel: #252321;
+  --color-ink: #EDEAE4;
+  --color-muted: #8A8680;
+  --color-spark: #E8A94C;
+  --color-calm: #5B8C87;
+  --color-rust: #C1604B;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: Inter, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: #EDEAE4;
+}
+
+::selection {
+  background: #E8A94C;
+  color: #1C1B1A;
+}
+
+:focus-visible {
+  outline: 2px solid #E8A94C;
+  outline-offset: 2px;
+}
