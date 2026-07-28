@@ -1,0 +1,88 @@
+{
+  "title": "MomentumRAG Monitoring",
+  "uid": "momentum-rag-monitoring",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-30d", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requests over time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+          "rawSql": "SELECT date_trunc('hour', created_at) AS time, count(*) AS requests FROM query_logs WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 1",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Average response latency (retrieval + LLM)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+          "rawSql": "SELECT avg(retrieval_ms + llm_ms) AS avg_latency_ms FROM query_logs WHERE $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Token usage over time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+          "rawSql": "SELECT date_trunc('hour', created_at) AS time, sum(total_tokens) AS tokens FROM query_logs WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 1",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Retrieval latency vs LLM latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+          "rawSql": "SELECT date_trunc('hour', created_at) AS time, avg(retrieval_ms) AS retrieval_ms, avg(llm_ms) AS llm_ms FROM query_logs WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 1",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Positive vs negative feedback",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "momentum_postgres" },
+          "rawSql": "SELECT CASE WHEN feedback = 1 THEN 'positive' WHEN feedback = -1 THEN 'negative' ELSE 'no feedback' END AS metric, count(*) AS value FROM query_logs WHERE $__timeFilter(created_at) GROUP BY 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
