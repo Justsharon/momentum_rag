@@ -1,0 +1,22 @@
+[project]
+name = "memory-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.140.0",
+    "groq>=1.6.0",
+    "jupyter>=1.1.1",
+    "minsearch>=0.2.0",
+    "pandas>=2.3.3",
+    "psycopg2-binary>=2.9.12",
+    "python-dotenv>=1.2.2",
+    "qdrant-client>=1.18.0",
+    "rank-bm25>=0.2.2",
+    "requests>=2.34.2",
+    "scikit-learn>=1.7.2",
+    "sentence-transformers>=5.6.1",
+    "tqdm>=4.69.1",
+    "uvicorn>=0.51.0",
+]
