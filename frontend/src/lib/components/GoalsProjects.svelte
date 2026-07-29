@@ -16,8 +16,15 @@
   type Goal = { id: string ; status: string };
   type Project = { id: string ; status: string };
 
+  let activeGoals = $derived(goals.filter((g) => g.status !== 'completed'));
+  let completedGoals = $derived(goals.filter((g) => g.status === 'completed'));
+  let activeProjects = $derived(projects.filter((p) => p.status !== 'done'));
+  let completedProjects = $derived(projects.filter((p) => p.status === 'done'));
+
   let showGoalForm = $state(false);
   let showProjectForm = $state(false);
+   let showCompletedGoals = $state(false);
+  let showCompletedProjects = $state(false);
   let error : string | null = $state(null);
 
   let newGoal = $state({ title: '', description: '', why: '', priority: 3 });
@@ -144,9 +151,9 @@
       </div>
     {/if}
 
-    {#if projects.length}
+    {#if activeProjects.length}
       <ul class="space-y-2">
-        {#each projects as p (p)}
+        {#each activeProjects as p (p)}
           <li class="text-sm">
             <div class="flex items-center justify-between gap-2">
               <span class="text-ink font-medium truncate">{p.name}</span>
@@ -167,6 +174,40 @@
           </li>
         {/each}
       </ul>
+    {/if}
+
+
+    {#if completedProjects.length}
+      <button
+        onclick={() => (showCompletedProjects = !showCompletedProjects)}
+        class="text-xs text-muted hover:text-ink transition mt-3 flex items-center gap-1"
+      >
+        <span class="transition-transform {showCompletedProjects ? 'rotate-90' : ''}">›</span>
+        Completed ({completedProjects.length})
+      </button>
+      {#if showCompletedProjects}
+        <ul class="space-y-2 mt-2">
+          {#each completedProjects as p (p)}
+            <li class="text-sm">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-muted line-through truncate">{p.name}</span>
+                <div class="flex items-center gap-2 shrink-0">
+                  <select
+                    value={p.status}
+                    onchange={(e: Event) => handleProjectStatusChange(p, (e.target as HTMLSelectElement).value)}
+                    class="text-xs font-mono bg-graphite border border-white/10 rounded px-1.5 py-0.5 text-muted"
+                  >
+                    {#each projectStatuses as s (s)}
+                      <option value={s}>{s}</option>
+                    {/each}
+                  </select>
+                  <button onclick={() => handleDeleteProject(p.id)} class="text-muted hover:text-rust transition" aria-label="Delete project">✕</button>
+                </div>
+              </div>
+            </li>
+          {/each}
+        </ul>
+      {/if}
     {/if}
   </div>
 
@@ -202,18 +243,18 @@
       </div>
     {/if}
 
-    {#if goals.length}
+    {#if activeGoals.length}
       <ul class="space-y-2">
-        {#each goals as g (g)}
+        {#each activeGoals as g (g)}
           <li class="text-sm">
             <div class="flex items-center justify-between gap-2">
               <span class="text-ink font-medium truncate">{g.title}</span>
               <div class="flex items-center gap-2 shrink-0">
-                <select
-                  value={g.status}
-                  onchange={(e: Event) => handleGoalStatusChange(g, (e.target as HTMLSelectElement).value)}
-                  class="text-xs font-mono bg-graphite border border-white/10 rounded px-1.5 py-0.5 {statusColor[g.status] || 'text-muted'}"
-                >
+                  <select
+                    value={g.status}
+                    onchange={(e: Event) => handleGoalStatusChange(g, (e.target as HTMLSelectElement).value)}
+                    class="text-xs font-mono bg-graphite border border-white/10 rounded px-1.5 py-0.5 {statusColor[g.status] || 'text-muted'}"
+                  >
                   {#each goalStatuses as s (s)}
                     <option value={s}>{s}</option>
                   {/each}
@@ -224,6 +265,39 @@
           </li>
         {/each}
       </ul>
+    {/if}
+ 
+    {#if completedGoals.length}
+      <button
+        onclick={() => (showCompletedGoals = !showCompletedGoals)}
+        class="text-xs text-muted hover:text-ink transition mt-3 flex items-center gap-1"
+      >
+        <span class="transition-transform {showCompletedGoals ? 'rotate-90' : ''}">›</span>
+        Completed ({completedGoals.length})
+      </button>
+      {#if showCompletedGoals}
+        <ul class="space-y-2 mt-2">
+          {#each completedGoals as g (g)}
+            <li class="text-sm">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-muted line-through truncate">{g.title}</span>
+                <div class="flex items-center gap-2 shrink-0">
+                  <select
+                    value={g.status}
+                    onchange={(e: Event) => handleGoalStatusChange(g, (e.target as HTMLSelectElement).value)}
+                    class="text-xs font-mono bg-graphite border border-white/10 rounded px-1.5 py-0.5 text-muted"
+                  >
+                    {#each goalStatuses as s (s)}
+                      <option value={s}>{s}</option>
+                    {/each}
+                  </select>
+                  <button onclick={() => handleDeleteGoal(g.id)} class="text-muted hover:text-rust transition" aria-label="Delete goal">✕</button>
+                </div>
+              </div>
+            </li>
+          {/each}
+        </ul>
+      {/if}
     {/if}
   </div>
 </div>
