@@ -20,12 +20,15 @@ from typing import Optional
 
 import psycopg2
 import psycopg2.extras
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from retrieval import retrieve
 from llm import ask_llm
+from indexing import upsert_document, delete_document
+from documents import goal_to_document, project_to_document, checkin_to_document
+from model import Goal, Project, CheckIn
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/momentum"
@@ -42,10 +45,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 def get_conn():
     return psycopg2.connect(DATABASE_URL)
-
 
 def partial_update(table: str, record_id: str, updates: dict):
     """Builds and runs an UPDATE for only the fields actually provided.
@@ -68,7 +69,58 @@ def partial_update(table: str, record_id: str, updates: dict):
     finally:
         conn.close()
 
+def _fetch_one(table: str, record_id: str) -> Optional[dict]:
+    conn = get_conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(f"SELECT * FROM {table} WHERE id = %s", (uuid.UUID(record_id),))
+            return cur.fetchone()
+    finally:
+        conn.close()
 
+def reindex_goal(goal_id: str):
+    """Runs in the background after a goal is created or edited. Cheap --
+    embeds only this one item, reusing the model already loaded in this
+    process (see embeddings.py) rather than the full ingest.py batch run.
+    Failures here are logged, not raised -- the write to Postgres already
+    succeeded and was returned to the client; a transient Qdrant issue
+    shouldn't surface as a broken request. Worst case, this item is
+    missing from search until the next successful write or a manual
+    `python ingest.py` run."""
+    try:
+        row = _fetch_one("goals", goal_id)
+        if row:
+            upsert_document(goal_to_document(Goal(**row)))
+    except Exception as e:
+        print(f"[reindex_goal] failed for {goal_id}: {e}")
+
+def reindex_project(project_id: str):
+    try:
+        row = _fetch_one("projects", project_id)
+        if row:
+            upsert_document(project_to_document(Project(**row)))
+    except Exception as e:
+        print(f"[reindex_project] failed for {project_id}: {e}")
+ 
+ 
+def reindex_checkin(checkin_id: str):
+    try:
+        row = _fetch_one("checkins", checkin_id)
+        if row:
+            upsert_document(checkin_to_document(CheckIn(**row)))
+    except Exception as e:
+        print(f"[reindex_checkin] failed for {checkin_id}: {e}")
+ 
+ 
+def deindex(source_id: str):
+    """Runs after a delete -- removes the item from the vector index too,
+    otherwise it stays searchable forever even though the row is gone."""
+    try:
+        delete_document(uuid.UUID(source_id))
+    except Exception as e:
+        print(f"[deindex] failed for {source_id}: {e}")
+ 
+ 
 def log_query(question: str, retrieved: list[dict], retrieval_ms: int,
               llm_ms: int, total_tokens: int, answer: str) -> str:
     """Writes one row to query_logs and returns its id (as a string) so the
@@ -208,7 +260,7 @@ def health():
 
 
 @app.post("/checkins")
-def create_checkin(req: CheckInRequest):
+def create_checkin(req: CheckInRequest, background_tasks: BackgroundTasks):
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -221,11 +273,11 @@ def create_checkin(req: CheckInRequest):
             )
             new_id = cur.fetchone()[0]
         conn.commit()
+        background_tasks.add_task(reindex_checkin, str(new_id))
         return {"id": str(new_id), "status": "created"}
     finally:
         conn.close()
-
-
+ 
 @app.get("/checkins/recent")
 def recent_checkins(limit: int = 14):
     conn = get_conn()
@@ -244,9 +296,8 @@ def recent_checkins(limit: int = 14):
     finally:
         conn.close()
 
-
 @app.post("/goals")
-def create_goal(req: GoalCreate):
+def create_goal(req: GoalCreate, background_tasks: BackgroundTasks):
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -258,28 +309,28 @@ def create_goal(req: GoalCreate):
             )
             new_id = cur.fetchone()[0]
         conn.commit()
+        background_tasks.add_task(reindex_goal, str(new_id))
         return {"id": str(new_id), "status": "created"}
     finally:
         conn.close()
 
-
 @app.patch("/goals/{goal_id}")
-def update_goal(goal_id: str, req: GoalUpdate):
+def update_goal(goal_id: str, req: GoalUpdate, background_tasks: BackgroundTasks):
     partial_update("goals", goal_id, req.model_dump())
+    background_tasks.add_task(reindex_goal, goal_id)
     return {"id": goal_id, "status": "updated"}
-
-
+ 
 @app.delete("/goals/{goal_id}")
-def delete_goal(goal_id: str):
+def delete_goal(goal_id: str, background_tasks: BackgroundTasks):
     conn = get_conn()
     try:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM goals WHERE id = %s", (uuid.UUID(goal_id),))
         conn.commit()
+        background_tasks.add_task(deindex, goal_id)
         return {"id": goal_id, "status": "deleted"}
     finally:
         conn.close()
-
 
 @app.get("/goals")
 def list_goals():
@@ -299,9 +350,8 @@ def list_goals():
     finally:
         conn.close()
 
-
 @app.post("/projects")
-def create_project(req: ProjectCreate):
+def create_project(req: ProjectCreate, background_tasks: BackgroundTasks):
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -314,28 +364,29 @@ def create_project(req: ProjectCreate):
             )
             new_id = cur.fetchone()[0]
         conn.commit()
+        background_tasks.add_task(reindex_project, str(new_id))
         return {"id": str(new_id), "status": "created"}
     finally:
         conn.close()
 
-
 @app.patch("/projects/{project_id}")
-def update_project(project_id: str, req: ProjectUpdate):
+def update_project(project_id: str, req: ProjectUpdate, background_tasks: BackgroundTasks):
     partial_update("projects", project_id, req.model_dump())
+    background_tasks.add_task(reindex_project, project_id)
     return {"id": project_id, "status": "updated"}
-
-
+ 
+ 
 @app.delete("/projects/{project_id}")
-def delete_project(project_id: str):
+def delete_project(project_id: str, background_tasks: BackgroundTasks):
     conn = get_conn()
     try:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM projects WHERE id = %s", (uuid.UUID(project_id),))
         conn.commit()
+        background_tasks.add_task(deindex, project_id)
         return {"id": project_id, "status": "deleted"}
     finally:
         conn.close()
-
 
 @app.get("/projects")
 def list_projects():

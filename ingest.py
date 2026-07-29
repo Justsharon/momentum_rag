@@ -1,11 +1,16 @@
 """
-Phase 2: ingestion + embedding pipeline.
+Phase 2: full batch ingestion + embedding pipeline.
 
 Reads every row from Postgres, flattens each into a Document (documents.py),
-embeds the text with a local sentence-transformers model, and upserts into
-Qdrant. Also writes each Document back into the `documents` Postgres table
-so BM25/keyword search (needed for hybrid search in Phase 4) has a source
-of truth that isn't the vector DB.
+embeds the text, and rebuilds the whole Qdrant collection from scratch.
+Also writes each Document back into the `documents` Postgres table so
+BM25/keyword search (needed for hybrid search in Phase 4) has a source of
+truth that isn't the vector DB.
+
+This is the manual/occasional full-refresh path. Day-to-day writes (a new
+check-in, an edited goal) go through indexing.py's incremental upsert
+instead, which is much cheaper -- run this one when you want to be sure
+everything is in sync, or after bulk changes like re-running seed.py.
 
 Usage:
     export DATABASE_URL="postgresql://user:pass@localhost:5432/momentum"
@@ -14,12 +19,15 @@ Usage:
 """
 
 import os
+import uuid
+
 import psycopg2
 import psycopg2.extras
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
-from fastembed import TextEmbedding
 
+from embeddings import embed_documents, EMBEDDING_DIM
+from chunking import chunk_text
 from model import Goal, Project, Reflection, Task, WeeklyPlan, CheckIn, Document
 from documents import (
     goal_to_document, project_to_document, reflection_to_document,
@@ -34,7 +42,6 @@ DATABASE_URL = os.environ.get(
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
 QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")  
 COLLECTION_NAME = "momentum_documents"
-EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5" 
 
 
 # 1. Fetch every row from Postgres and convert to Document objects.
@@ -62,28 +69,11 @@ def fetch_all_documents(conn) -> list[Document]:
 
     return docs
 
-# 2. Chunking. Most of your documents are short (one goal, one reflection),
-#    so this only actually splits the rare long one. Simple word-count
-#    chunking is enough here -- no need for anything fancier at this scale.
-
-def chunk_text(text: str, max_words: int = 200, overlap: int = 30) -> list[str]:
-    words = text.split()
-    if len(words) <= max_words:
-        return [text]
-    chunks = []
-    start = 0
-    while start < len(words):
-        end = start + max_words
-        chunks.append(" ".join(words[start:end]))
-        start = end - overlap
-    return chunks
-
-
-# 3. Write flattened Documents back to Postgres (source of truth for BM25).
+# 2. Write flattened Documents back to Postgres (source of truth for BM25).
 
 def upsert_documents_table(conn, docs: list[Document]):
     with conn.cursor() as cur:
-        cur.execute("DELETE FROM documents")  
+        cur.execute("DELETE FROM documents")  # full-refresh for this batch path
         for d in docs:
             cur.execute(
                 """INSERT INTO documents (id, source_type, source_id, title, text, metadata, embedded_at)
@@ -92,33 +82,42 @@ def upsert_documents_table(conn, docs: list[Document]):
             )
     conn.commit()
 
-# 4. Embed and push into Qdrant.
 
-def ensure_collection(client: QdrantClient, dim: int):
+# 3. Embed and push into Qdrant.
+
+def ensure_collection(client: QdrantClient):
     if not client.collection_exists(COLLECTION_NAME):
         client.create_collection(
             collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
+            vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE),
         )
 
-EMBEDDING_DIM = 384  
+
+def chunk_point_id(document_id: uuid.UUID, chunk_index: int) -> str:
+    """Same scheme as indexing.py -- deterministic per (document, chunk),
+    so this full-batch run and incremental single-item updates never
+    produce colliding or duplicate points for the same underlying data."""
+    return str(uuid.uuid5(document_id, str(chunk_index)))
+
 
 def embed_and_upsert(docs: list[Document]):
-    model = TextEmbedding(model_name=EMBEDDING_MODEL)
     client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY, check_compatibility=False)
-    ensure_collection(client, EMBEDDING_DIM)
+    ensure_collection(client)
+    client.delete_collection(COLLECTION_NAME)
+    ensure_collection(client)
 
-    # Flatten (doc, chunk) pairs first so we can embed everything in one
-    # batched call -- much faster than one encode() call per chunk.
     doc_chunk_pairs = [(doc, chunk) for doc in docs for chunk in chunk_text(doc.text)]
     chunk_texts = [chunk for _, chunk in doc_chunk_pairs]
-    vectors = [v.tolist() for v in model.embed(chunk_texts)]
+    vectors = embed_documents(chunk_texts)
 
     points = []
-    for point_id, ((doc, chunk), vector) in enumerate(zip(doc_chunk_pairs, vectors)):
+    chunk_index_by_doc = {}
+    for (doc, chunk), vector in zip(doc_chunk_pairs, vectors):
+        idx = chunk_index_by_doc.get(doc.id, 0)
+        chunk_index_by_doc[doc.id] = idx + 1
         points.append(
             PointStruct(
-                id=point_id,
+                id=chunk_point_id(doc.id, idx),
                 vector=vector,
                 payload={
                     "document_id": str(doc.id),

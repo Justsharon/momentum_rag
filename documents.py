@@ -7,7 +7,6 @@ text -- keeping it centralized means Phase 3 (retrieval) and Phase 4 (eval)
 don't need to know anything about the source tables.
 """
 
-from uuid import uuid4
 from model import (
     Goal, Project, Reflection, Task, WeeklyPlan, CheckIn,
     Document, KnowledgeType,
@@ -25,7 +24,7 @@ def goal_to_document(g: Goal) -> Document:
         + (f"Tags: {', '.join(g.tags)}" if g.tags else "")
     )
     return Document(
-        id=uuid4(), source_type=KnowledgeType.GOAL, source_id=g.id,
+        id=g.id, source_type=KnowledgeType.GOAL, source_id=g.id,
         title=g.title, text=text,
         metadata={"status": g.status.value, "priority": str(g.priority)},
     )
@@ -43,7 +42,7 @@ def project_to_document(p: Project) -> Document:
         + (f"Tags: {', '.join(p.tags)}" if p.tags else "")
     )
     return Document(
-        id=uuid4(), source_type=KnowledgeType.PROJECT, source_id=p.id,
+        id=p.id, source_type=KnowledgeType.PROJECT, source_id=p.id,
         title=p.name, text=text, metadata={"status": p.status.value},
     )
 
@@ -59,7 +58,7 @@ def reflection_to_document(r: Reflection) -> Document:
         f"Notes: {r.reflection}"
     )
     return Document(
-        id=uuid4(), source_type=KnowledgeType.REFLECTION, source_id=r.id,
+        id=r.id, source_type=KnowledgeType.REFLECTION, source_id=r.id,
         title=f"Reflection {r.date}", text=text,
         metadata={"date": str(r.date), "mood": str(r.mood)},
     )
@@ -74,7 +73,7 @@ def task_to_document(t: Task) -> Document:
         f"Estimated: {t.estimated_minutes} min"
     )
     return Document(
-        id=uuid4(), source_type=KnowledgeType.TASK, source_id=t.id,
+        id=t.id, source_type=KnowledgeType.TASK, source_id=t.id,
         title=t.title, text=text,
         metadata={"status": t.status.value, "project": t.project},
     )
@@ -89,7 +88,7 @@ def weekly_plan_to_document(w: WeeklyPlan) -> Document:
         f"Planned tasks: {'; '.join(w.planned_tasks)}"
     )
     return Document(
-        id=uuid4(), source_type=KnowledgeType.WEEKLY_PLAN, source_id=w.id,
+        id=w.id, source_type=KnowledgeType.WEEKLY_PLAN, source_id=w.id,
         title=f"Weekly plan {w.week}", text=text, metadata={"week": w.week},
     )
 
@@ -104,7 +103,7 @@ def checkin_to_document(c: CheckIn) -> Document:
         + (f"Trigger: {c.trigger_note}" if c.trigger_note else "")
     )
     return Document(
-        id=uuid4(), source_type=KnowledgeType.CHECKIN, source_id=c.id,
+        id=c.id, source_type=KnowledgeType.CHECKIN, source_id=c.id,
         title=f"Check-in {c.date}", text=text,
         metadata={
             "date": str(c.date),
