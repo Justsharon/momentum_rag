@@ -11,6 +11,7 @@ Test:
       -H "Content-Type: application/json" \
       -d '{"question": "What should I focus on today?"}'
 """
+
 import os
 import time
 import uuid
@@ -27,7 +28,7 @@ from retrieval import retrieve
 from llm import ask_llm
 
 DATABASE_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/momentum"
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/momentum"
 )
 psycopg2.extras.register_uuid()
 
@@ -41,8 +42,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 def get_conn():
     return psycopg2.connect(DATABASE_URL)
+
+
+def partial_update(table: str, record_id: str, updates: dict):
+    """Builds and runs an UPDATE for only the fields actually provided.
+    `updates` keys must already be trusted column names (comes from a
+    Pydantic model's own field names, never raw user input) -- this is
+    what makes the f-string column interpolation below safe."""
+    updates = {k: v for k, v in updates.items() if v is not None}
+    if not updates:
+        return
+    set_clause = ", ".join(f"{col} = %s" for col in updates)
+    values = list(updates.values()) + [uuid.UUID(record_id)]
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"UPDATE {table} SET {set_clause}, updated_at = now() WHERE id = %s",
+                values,
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 def log_query(question: str, retrieved: list[dict], retrieval_ms: int,
               llm_ms: int, total_tokens: int, answer: str) -> str:
@@ -78,9 +103,11 @@ class AskResponse(BaseModel):
     total_tokens: int
     log_id: str
 
+
 class FeedbackRequest(BaseModel):
     log_id: str
-    feedback: int
+    feedback: int  # 1 = thumbs up, -1 = thumbs down
+
 
 class CheckInRequest(BaseModel):
     date: date
@@ -89,6 +116,49 @@ class CheckInRequest(BaseModel):
     social_media_opened_count: int = 0
     reinstalled_app: bool = False
     trigger_note: Optional[str] = None
+
+
+class GoalCreate(BaseModel):
+    title: str
+    description: str
+    why: str
+    status: str = "not_started"
+    deadline: Optional[date] = None
+    priority: int
+    tags: list[str] = []
+
+
+class GoalUpdate(BaseModel):
+    # All fields optional -- only the ones the client sends get updated.
+    title: Optional[str] = None
+    description: Optional[str] = None
+    why: Optional[str] = None
+    status: Optional[str] = None
+    deadline: Optional[date] = None
+    priority: Optional[int] = None
+    tags: Optional[list[str]] = None
+
+
+class ProjectCreate(BaseModel):
+    name: str
+    description: str
+    objective: str
+    current_focus: str
+    next_step: str
+    status: str = "active"
+    technologies: list[str] = []
+    tags: list[str] = []
+
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    objective: Optional[str] = None
+    current_focus: Optional[str] = None
+    next_step: Optional[str] = None
+    status: Optional[str] = None
+    technologies: Optional[list[str]] = None
+    tags: Optional[list[str]] = None
 
 
 @app.post("/ask", response_model=AskResponse)
@@ -136,6 +206,7 @@ def submit_feedback(req: FeedbackRequest):
 def health():
     return {"status": "ok"}
 
+
 @app.post("/checkins")
 def create_checkin(req: CheckInRequest):
     conn = get_conn()
@@ -153,6 +224,7 @@ def create_checkin(req: CheckInRequest):
         return {"id": str(new_id), "status": "created"}
     finally:
         conn.close()
+
 
 @app.get("/checkins/recent")
 def recent_checkins(limit: int = 14):
@@ -172,7 +244,43 @@ def recent_checkins(limit: int = 14):
     finally:
         conn.close()
 
- 
+
+@app.post("/goals")
+def create_goal(req: GoalCreate):
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO goals (title, description, why, status, deadline, priority, tags)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                (req.title, req.description, req.why, req.status,
+                 req.deadline, req.priority, req.tags),
+            )
+            new_id = cur.fetchone()[0]
+        conn.commit()
+        return {"id": str(new_id), "status": "created"}
+    finally:
+        conn.close()
+
+
+@app.patch("/goals/{goal_id}")
+def update_goal(goal_id: str, req: GoalUpdate):
+    partial_update("goals", goal_id, req.model_dump())
+    return {"id": goal_id, "status": "updated"}
+
+
+@app.delete("/goals/{goal_id}")
+def delete_goal(goal_id: str):
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM goals WHERE id = %s", (uuid.UUID(goal_id),))
+        conn.commit()
+        return {"id": goal_id, "status": "deleted"}
+    finally:
+        conn.close()
+
+
 @app.get("/goals")
 def list_goals():
     conn = get_conn()
@@ -190,8 +298,45 @@ def list_goals():
         ]
     finally:
         conn.close()
- 
- 
+
+
+@app.post("/projects")
+def create_project(req: ProjectCreate):
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO projects (name, description, objective, current_focus,
+                   next_step, status, technologies, tags)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                (req.name, req.description, req.objective, req.current_focus,
+                 req.next_step, req.status, req.technologies, req.tags),
+            )
+            new_id = cur.fetchone()[0]
+        conn.commit()
+        return {"id": str(new_id), "status": "created"}
+    finally:
+        conn.close()
+
+
+@app.patch("/projects/{project_id}")
+def update_project(project_id: str, req: ProjectUpdate):
+    partial_update("projects", project_id, req.model_dump())
+    return {"id": project_id, "status": "updated"}
+
+
+@app.delete("/projects/{project_id}")
+def delete_project(project_id: str):
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM projects WHERE id = %s", (uuid.UUID(project_id),))
+        conn.commit()
+        return {"id": project_id, "status": "deleted"}
+    finally:
+        conn.close()
+
+
 @app.get("/projects")
 def list_projects():
     conn = get_conn()

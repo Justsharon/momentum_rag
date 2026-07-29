@@ -58,7 +58,58 @@ export async function getGoals() {
   return handleResponse(res);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function createGoal(payload: any) {
+  const res = await fetch(`${API_BASE}/goals`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+ 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function updateGoal(id: string, payload: any) {
+  const res = await fetch(`${API_BASE}/goals/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+ 
+export async function deleteGoal(id: string) {
+  const res = await fetch(`${API_BASE}/goals/${id}`, { method: 'DELETE' });
+  return handleResponse(res);
+}
+ 
+
 export async function getProjects() {
   const res = await fetch(`${API_BASE}/projects`);
+  return handleResponse(res);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function createProject(payload: any) {
+  const res = await fetch(`${API_BASE}/projects`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+ 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function updateProject(id: string, payload: any) {
+  const res = await fetch(`${API_BASE}/projects/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+ 
+export async function deleteProject(id: string) {
+  const res = await fetch(`${API_BASE}/projects/${id}`, { method: 'DELETE' });
   return handleResponse(res);
 }
